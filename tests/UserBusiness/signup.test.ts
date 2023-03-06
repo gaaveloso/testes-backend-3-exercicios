@@ -1,5 +1,6 @@
 import { UserBusiness } from "../../src/business/UserBusiness"
 import { SignupInputDTO } from "../../src/dtos/userDTO"
+import { BadRequestError } from "../../src/errors/BadRequestError"
 import { HashManagerMock } from "../mocks/HashManagerMock"
 import { IdGeneratorMock } from "../mocks/IdGeneratorMock"
 import { TokenManagerMock } from "../mocks/TokenManagerMock"
@@ -22,5 +23,71 @@ describe("signup", () => {
 
         const response = await userBusiness.signup(input)
         expect(response.token).toBe("token-mock-normal")
+    })
+
+    test("Erro no signup NAME", async () => {
+        expect.assertions(1)
+
+        const input: SignupInputDTO = {
+            name: null,
+            email: "normal@email.com",
+            password: "hash-bananinha",
+        }
+
+        try {
+            await userBusiness.signup(input)
+        } catch (error) {
+            if(error instanceof BadRequestError) {
+                expect(error.message).toBe("'name' deve ser string")
+            }
+        }
+    })
+
+    test("Erro no signup EMAIL", async () => {
+        expect.assertions(1)
+
+        const input: SignupInputDTO = {
+            name: "Normal Mock",
+            email: 5,
+            password: "hash-bananinha",
+        }
+
+        try {
+            await userBusiness.signup(input)
+        } catch (error) {
+            if(error instanceof BadRequestError) {
+                expect(error.message).toBe("'email' deve ser string")
+            }
+        }
+    })
+
+    test("Erro no signup PASSWORD", async () => {
+        expect.assertions(1)
+
+        const input: SignupInputDTO = {
+            name: "Normal Mock",
+            email: "normal@email.com",
+            password: 123,
+        }
+
+        try {
+            await userBusiness.signup(input)
+        } catch (error) {
+            if(error instanceof BadRequestError) {
+                expect(error.message).toBe("'password' deve ser string")
+            }
+        }
+    })
+
+    test("Erro no signup EMAIL JA EXISTE", async () => {
+        const input: SignupInputDTO = {
+            name: "Normal Mock",
+            email: "normal@email.com",
+            password: "hash-bananinha",
+        }
+
+        expect(async () => {
+            await userBusiness.signup(input)
+        }).rejects.toThrow("'email' já existe")
     })
 })
